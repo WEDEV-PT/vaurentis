@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Project;
 use App\Models\ProjectClick;
+use App\Support\AuditLogger;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -13,12 +14,17 @@ class ProjectClickController extends Controller
     {
         $user = $request->user();
 
-        abort_unless($user->is_active, 403);
+        if (! $user->is_active) {
+            AuditLogger::record('access.denied', $project, ['reason' => 'inactive_user']);
 
-        abort_unless(
-            $user->is_admin || $project->users()->whereKey($user)->exists(),
-            403,
-        );
+            abort(403);
+        }
+
+        if (! $user->is_admin && ! $project->users()->whereKey($user)->exists()) {
+            AuditLogger::record('access.denied', $project, ['reason' => 'project_not_assigned']);
+
+            abort(403);
+        }
 
         abort_unless(
             $project->status === 'active' && $project->is_published && filled($project->html_content),

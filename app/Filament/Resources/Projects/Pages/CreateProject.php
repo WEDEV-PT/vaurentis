@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Projects\Pages;
 
 use App\Filament\Resources\Projects\ProjectResource;
 use App\Models\Project;
+use App\Support\AuditLogger;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -42,5 +43,13 @@ class CreateProject extends CreateRecord
         }
 
         return $slug;
+    }
+
+    protected function afterCreate(): void
+    {
+        AuditLogger::record('project.assignments_updated', $this->record, [
+            'assigned_user_ids' => $this->record->users()->pluck('users.id')->all(),
+            'category_ids' => $this->record->categories()->pluck('categories.id')->all(),
+        ]);
     }
 }

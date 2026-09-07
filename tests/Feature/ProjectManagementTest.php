@@ -78,6 +78,16 @@ class ProjectManagementTest extends TestCase
             ->assertSee('Analytics Board');
     }
 
+    public function test_administrator_can_view_the_audit_log(): void
+    {
+        $administrator = User::factory()->create(['is_admin' => true]);
+
+        $this->actingAs($administrator)
+            ->get('/app/audit-logs')
+            ->assertOk()
+            ->assertSee('Audit Log');
+    }
+
     public function test_an_assigned_user_can_record_a_project_click(): void
     {
         $project = Project::query()->create([
@@ -155,5 +165,41 @@ class ProjectManagementTest extends TestCase
         $this->actingAs($user)
             ->get('/app/users')
             ->assertForbidden();
+    }
+
+    public function test_an_unassigned_user_cannot_view_a_project(): void
+    {
+        $project = Project::query()->create([
+            'name' => 'Private Board',
+            'slug' => 'private-board',
+            'html_content' => '<h1>Private Board</h1>',
+            'is_published' => true,
+            'status' => 'active',
+        ]);
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->get("/app/projects/view/{$project->id}")
+            ->assertForbidden();
+    }
+
+    public function test_an_anonymous_project_request_is_redirected_and_audited(): void
+    {
+        $project = Project::query()->create([
+            'name' => 'Protected Board',
+            'slug' => 'protected-board',
+            'html_content' => '<h1>Protected Board</h1>',
+            'is_published' => true,
+            'status' => 'active',
+        ]);
+
+        $this->get("/app/projects/view/{$project->id}")
+            ->assertRedirect('/app/login');
+
+        $this->assertDatabaseHas('audit_logs', [
+            'project_id' => $project->id,
+            'action' => 'access.unauthenticated',
+            'actor_id' => null,
+        ]);
     }
 }

@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Models\Project;
 use App\Models\ProjectAccess;
+use App\Support\AuditLogger;
 use Filament\Pages\Page;
 use Filament\Panel;
 use Filament\Support\Enums\Width;
@@ -33,19 +34,24 @@ class ProjectViewer extends Page
     {
         $user = auth()->user();
 
-        return $user?->is_admin || $user?->projects()->exists();
+        return $user?->is_active ?? false;
     }
 
     public function mount(Project $project): void
     {
         $user = auth()->user();
 
-        abort_unless($user->is_active, 403);
+        if (! $user->is_active) {
+            AuditLogger::record('access.denied', $project, ['reason' => 'inactive_user']);
 
-        abort_unless(
-            $user->is_admin || $project->users()->whereKey($user)->exists(),
-            403,
-        );
+            abort(403);
+        }
+
+        if (! $user->is_admin && ! $project->users()->whereKey($user)->exists()) {
+            AuditLogger::record('access.denied', $project, ['reason' => 'project_not_assigned']);
+
+            abort(403);
+        }
 
         abort_unless(
             $project->status === 'active' && $project->is_published && filled($project->html_content),
