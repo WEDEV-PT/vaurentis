@@ -1,0 +1,68 @@
+name: Deploy Vaurentis - SFTP
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build frontend assets
+        run: |
+          npm ci
+          npm run build
+
+      - name: SFTP deploy
+        uses: wlixcc/SFTP-Deploy-Action@v1.2.6
+        with:
+          username: ${{ secrets.SSH_USERNAME }}
+          server: ${{ secrets.SSH_HOST }}
+          port: ${{ secrets.SSH_PORT }}
+          ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY }}
+          local_path: ./
+          remote_path: ${{ secrets.DEPLOY_PATH }}
+          rsyncArgs: >-
+            --exclude=.git/
+            --exclude=.github/
+            --exclude=.gitattributes
+            --exclude=.gitignore
+            --exclude=.editorconfig
+            --exclude=.env
+            --exclude=.env.*
+            --exclude=.DS_Store
+            --exclude=.idea/
+            --exclude=.vscode/
+            --exclude=docs/
+            --exclude=vendor/
+            --exclude=tests/
+            --exclude=storage/*
+            --exclude=bootstrap/cache/*
+            --exclude=public/storage/
+            --exclude=public/hot
+            --exclude=npm-debug.log
+            --exclude=yarn-error.log
+            --exclude=**/node_modules/
+          sftpArgs: '-o ConnectTimeout=5'
+
+      - name: Install dependencies and deploy
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          username: ${{ secrets.SSH_USERNAME }}
+          host: ${{ secrets.SSH_HOST }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            set -e
+            cd ${{ secrets.DEPLOY_PATH }}
+            php -v
+            (php artisan down) || true
+            php composer.phar install --no-dev --no-interaction --prefer-dist --optimize-autoloader
+            php artisan migrate --force
+            php artisan up
+            php artisan optimize:clear
+            php artisan config:cache
+            php artisan route:cache
+            php artisan view:cache
