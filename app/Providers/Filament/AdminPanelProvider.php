@@ -21,7 +21,6 @@ use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 class AdminPanelProvider extends PanelProvider
@@ -44,7 +43,7 @@ class AdminPanelProvider extends PanelProvider
                     ->value('brand_logo_path');
 
                 return filled($customLogoPath)
-                    ? Storage::disk('public')->url($customLogoPath)
+                    ? route('branding.logo')
                     : asset('images/vaurentis-mark.png');
             })
             ->brandLogoHeight('2rem')

@@ -6,6 +6,7 @@ use App\Models\Category;
 use App\Models\Project;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
@@ -39,6 +40,22 @@ class ProjectManagementTest extends TestCase
             ->assertOk()
             ->assertSee('Application branding')
             ->assertSee('Application logo');
+    }
+
+    public function test_the_saved_application_logo_is_served_without_a_public_storage_symlink(): void
+    {
+        Storage::fake('public');
+        Storage::disk('public')->put('branding/logo.png', 'logo-image-content');
+
+        User::factory()->create([
+            'is_admin' => true,
+            'brand_logo_path' => 'branding/logo.png',
+        ]);
+
+        $this->get(route('branding.logo'))
+            ->assertOk()
+            ->assertHeader('content-disposition', 'inline; filename="Vaurentis logo"')
+            ->assertStreamedContent('logo-image-content');
     }
 
     public function test_projects_can_be_assigned_to_users(): void
