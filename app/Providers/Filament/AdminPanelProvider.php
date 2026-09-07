@@ -2,9 +2,11 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Auth\Pages\EditProfile;
 use App\Filament\Pages\MyProjects;
 use App\Filament\Resources\Projects\ProjectResource;
 use App\Http\Middleware\AuditAuthenticate;
+use App\Models\User;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
@@ -19,6 +21,7 @@ use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 class AdminPanelProvider extends PanelProvider
@@ -30,7 +33,21 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('app')
             ->login()
+            ->profile(EditProfile::class, isSimple: false)
             ->homeUrl(fn (): string => auth()->user()?->is_admin ? ProjectResource::getUrl() : MyProjects::getUrl())
+            ->brandName('Vaurentis')
+            ->brandLogo(function (): string {
+                $customLogoPath = User::query()
+                    ->where('is_admin', true)
+                    ->whereNotNull('brand_logo_path')
+                    ->orderBy('id')
+                    ->value('brand_logo_path');
+
+                return filled($customLogoPath)
+                    ? Storage::disk('public')->url($customLogoPath)
+                    : asset('images/vaurentis-mark.png');
+            })
+            ->brandLogoHeight('2rem')
             ->colors([
                 // Keep the interaction colour close to the navy used in the
                 // Vaurentis website, rather than letting Filament derive a

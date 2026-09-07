@@ -30,6 +30,17 @@ class ProjectManagementTest extends TestCase
             ->assertOk();
     }
 
+    public function test_an_administrator_can_edit_their_profile_and_application_branding(): void
+    {
+        $administrator = User::factory()->create(['is_admin' => true]);
+
+        $this->actingAs($administrator)
+            ->get('/app/profile')
+            ->assertOk()
+            ->assertSee('Application branding')
+            ->assertSee('Application logo');
+    }
+
     public function test_projects_can_be_assigned_to_users(): void
     {
         $project = Project::query()->create([

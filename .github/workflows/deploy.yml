@@ -64,6 +64,7 @@ jobs:
             ($PHP_BIN artisan down) || true
             $PHP_BIN composer.phar install --no-dev --no-interaction --prefer-dist --optimize-autoloader
             $PHP_BIN artisan migrate --force
+            $PHP_BIN artisan storage:link
             $PHP_BIN artisan up
             $PHP_BIN artisan optimize:clear
             $PHP_BIN artisan config:cache

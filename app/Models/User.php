@@ -27,6 +27,7 @@ class User extends Authenticatable implements FilamentUser
         'is_admin',
         'is_active',
         'timezone',
+        'brand_logo_path',
     ];
 
     /**
