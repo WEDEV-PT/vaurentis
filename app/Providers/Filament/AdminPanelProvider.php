@@ -33,7 +33,7 @@ class AdminPanelProvider extends PanelProvider
             ->login()
             ->homeUrl(fn (): string => auth()->user()?->is_admin ? ProjectResource::getUrl() : MyProjects::getUrl())
             ->colors([
-                'primary' => Color::Amber,
+                'primary' => Color::hex('#1f2b45'),
             ])
             ->renderHook(PanelsRenderHook::SIDEBAR_NAV_START, fn (): View => view('filament.components.project-folder'))
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
