@@ -10,7 +10,6 @@ use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Panel;
 use Filament\PanelProvider;
-use Filament\Support\Colors\Color;
 use Filament\View\PanelsRenderHook;
 use Filament\Widgets\AccountWidget;
 use Filament\Widgets\FilamentInfoWidget;
@@ -33,7 +32,22 @@ class AdminPanelProvider extends PanelProvider
             ->login()
             ->homeUrl(fn (): string => auth()->user()?->is_admin ? ProjectResource::getUrl() : MyProjects::getUrl())
             ->colors([
-                'primary' => Color::hex('#1f2b45'),
+                // Keep the interaction colour close to the navy used in the
+                // Vaurentis website, rather than letting Filament derive a
+                // much lighter palette from one hexadecimal value.
+                'primary' => [
+                    50 => '#f4f6fa',
+                    100 => '#e6eaf2',
+                    200 => '#cbd3e1',
+                    300 => '#aab7cc',
+                    400 => '#7183a3',
+                    500 => '#2c3d5f',
+                    600 => '#1f2b45',
+                    700 => '#182238',
+                    800 => '#121a2d',
+                    900 => '#0d1423',
+                    950 => '#070c16',
+                ],
             ])
             ->renderHook(PanelsRenderHook::SIDEBAR_NAV_START, fn (): View => view('filament.components.project-folder'))
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
