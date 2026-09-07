@@ -59,6 +59,8 @@ jobs:
             cd ${{ secrets.DEPLOY_PATH }}
             PHP_BIN=/opt/alt/php84/usr/bin/php
             $PHP_BIN -v
+            mkdir -p storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs bootstrap/cache
+            chmod -R ug+rwx storage bootstrap/cache
             ($PHP_BIN artisan down) || true
             $PHP_BIN composer.phar install --no-dev --no-interaction --prefer-dist --optimize-autoloader
             $PHP_BIN artisan migrate --force
