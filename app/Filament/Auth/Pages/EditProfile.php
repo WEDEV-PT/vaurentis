@@ -2,8 +2,10 @@
 
 namespace App\Filament\Auth\Pages;
 
+use DateTimeZone;
 use Filament\Auth\Pages\EditProfile as BaseEditProfile;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Select;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 
@@ -18,6 +20,12 @@ class EditProfile extends BaseEditProfile
                     ->schema([
                         $this->getNameFormComponent(),
                         $this->getEmailFormComponent(),
+                        Select::make('timezone')
+                            ->label('Time zone')
+                            ->options(array_combine(DateTimeZone::listIdentifiers(), DateTimeZone::listIdentifiers()))
+                            ->default('Europe/Lisbon')
+                            ->searchable()
+                            ->required(),
                         $this->getPasswordFormComponent(),
                         $this->getPasswordConfirmationFormComponent(),
                         $this->getCurrentPasswordFormComponent(),

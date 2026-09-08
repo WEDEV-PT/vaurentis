@@ -2,9 +2,11 @@
 
 namespace Tests\Feature;
 
+use App\Models\AuditLog;
 use App\Models\Category;
 use App\Models\Project;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -39,7 +41,8 @@ class ProjectManagementTest extends TestCase
             ->get('/app/profile')
             ->assertOk()
             ->assertSee('Application branding')
-            ->assertSee('Application logo');
+            ->assertSee('Application logo')
+            ->assertSee('Time zone');
     }
 
     public function test_the_saved_application_logo_is_served_without_a_public_storage_symlink(): void
@@ -114,6 +117,26 @@ class ProjectManagementTest extends TestCase
             ->get('/app/audit-logs')
             ->assertOk()
             ->assertSee('Audit Log');
+    }
+
+    public function test_audit_log_dates_are_displayed_in_the_administrators_timezone(): void
+    {
+        $administrator = User::factory()->create([
+            'is_admin' => true,
+            'timezone' => 'Europe/Lisbon',
+        ]);
+
+        AuditLog::query()->create([
+            'action' => 'project.created',
+            'target_type' => 'Project',
+            'target_label' => 'Timezone test',
+            'occurred_at' => Carbon::parse('2026-07-01 12:00:00', 'UTC'),
+        ]);
+
+        $this->actingAs($administrator)
+            ->get('/app/audit-logs')
+            ->assertOk()
+            ->assertSee('01/07/2026 13:00');
     }
 
     public function test_an_assigned_user_can_record_a_project_click(): void

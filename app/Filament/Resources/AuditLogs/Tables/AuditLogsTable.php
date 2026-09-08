@@ -14,7 +14,10 @@ class AuditLogsTable
     {
         return $table
             ->columns([
-                TextColumn::make('occurred_at')->label('Date & time')->dateTime('d/m/Y H:i')->sortable(),
+                TextColumn::make('occurred_at')
+                    ->label('Date & time')
+                    ->dateTime('d/m/Y H:i', fn (): string => auth()->user()?->timezone ?: 'Europe/Lisbon')
+                    ->sortable(),
                 TextColumn::make('actor.name')->label('User')->default('Guest')->searchable()->sortable(),
                 TextColumn::make('action')->label('Action')->badge()->searchable(),
                 TextColumn::make('target_type')->label('Target type')->badge(),
