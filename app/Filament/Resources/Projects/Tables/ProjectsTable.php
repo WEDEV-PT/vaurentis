@@ -37,7 +37,6 @@ class ProjectsTable
                     ->label('Preview')
                     ->icon(Heroicon::OutlinedEye)
                     ->url(fn (Project $record): string => ProjectPreview::getUrl(['project' => $record]))
-                    ->openUrlInNewTab()
                     ->visible(fn (Project $record): bool => filled($record->html_content)),
                 EditAction::make(),
             ])
