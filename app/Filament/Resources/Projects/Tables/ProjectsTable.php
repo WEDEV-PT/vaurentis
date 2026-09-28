@@ -2,9 +2,13 @@
 
 namespace App\Filament\Resources\Projects\Tables;
 
+use App\Filament\Pages\ProjectPreview;
+use App\Models\Project;
+use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -29,6 +33,12 @@ class ProjectsTable
                 //
             ])
             ->recordActions([
+                Action::make('preview')
+                    ->label('Preview')
+                    ->icon(Heroicon::OutlinedEye)
+                    ->url(fn (Project $record): string => ProjectPreview::getUrl(['project' => $record]))
+                    ->openUrlInNewTab()
+                    ->visible(fn (Project $record): bool => filled($record->html_content)),
                 EditAction::make(),
             ])
             ->toolbarActions([

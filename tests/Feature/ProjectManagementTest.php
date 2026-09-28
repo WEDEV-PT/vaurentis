@@ -218,6 +218,27 @@ class ProjectManagementTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_an_administrator_can_preview_a_project_without_creating_analytics(): void
+    {
+        $administrator = User::factory()->create(['is_admin' => true]);
+        $project = Project::query()->create([
+            'name' => 'Draft board',
+            'slug' => 'draft-board',
+            'html_content' => '<h1>Draft board</h1>',
+            'is_published' => false,
+            'status' => 'archived',
+        ]);
+
+        $this->actingAs($administrator)
+            ->get("/app/projects/{$project->id}/preview")
+            ->assertOk()
+            ->assertSee('Admin preview')
+            ->assertSee('Draft board');
+
+        $this->assertDatabaseCount('project_accesses', 0);
+        $this->assertDatabaseCount('project_clicks', 0);
+    }
+
     public function test_an_unassigned_user_cannot_view_a_project(): void
     {
         $project = Project::query()->create([
