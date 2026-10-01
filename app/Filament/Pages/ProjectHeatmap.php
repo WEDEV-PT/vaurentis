@@ -6,6 +6,8 @@ use App\Models\Project;
 use Filament\Pages\Page;
 use Filament\Panel;
 use Filament\Support\Enums\Width;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Collection;
 
 class ProjectHeatmap extends Page
 {
@@ -16,6 +18,9 @@ class ProjectHeatmap extends Page
     protected Width|string|null $maxContentWidth = Width::Full;
 
     public Project $project;
+
+    /** Empty value represents all users. */
+    public string $selectedUserId = '';
 
     public static function getRoutePath(Panel $panel): string
     {
@@ -49,13 +54,22 @@ class ProjectHeatmap extends Page
 
     public function getTotalClicksProperty(): int
     {
-        return $this->project->clicks()->count();
+        return $this->clicksQuery()->count();
+    }
+
+    /** @return Collection<int, object> */
+    public function getClickUsersProperty(): Collection
+    {
+        return $this->project->users()
+            ->select('users.id', 'users.name')
+            ->orderBy('users.name')
+            ->get();
     }
 
     /** @return array<int, array{x: float, y: float, clicks: int, intensity: float}> */
     public function getHeatmapPointsProperty(): array
     {
-        $bins = $this->project->clicks()
+        $bins = $this->clicksQuery()
             ->selectRaw('FLOOR(click_x / 250) as x_bin, FLOOR(click_y / 250) as y_bin, COUNT(*) as clicks')
             ->groupBy('x_bin', 'y_bin')
             ->get();
@@ -71,6 +85,15 @@ class ProjectHeatmap extends Page
             ])
             ->values()
             ->all();
+    }
+
+    private function clicksQuery(): HasMany
+    {
+        return $this->project->clicks()
+            ->when(
+                filled($this->selectedUserId),
+                fn ($query) => $query->where('user_id', $this->selectedUserId),
+            );
     }
 
     public function getHeatmapHtmlContentProperty(): string

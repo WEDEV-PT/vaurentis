@@ -15,6 +15,8 @@ class Project extends Model
         'description',
         'html_content',
         'html_filename',
+        'source_file_path',
+        'source_filename',
         'is_published',
         'status',
     ];

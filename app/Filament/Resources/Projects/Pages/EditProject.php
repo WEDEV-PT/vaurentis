@@ -18,6 +18,8 @@ class EditProject extends EditRecord
     /** @var array<int, int> */
     protected array $originalCategoryIds = [];
 
+    protected ?string $replacedSourceFilePath = null;
+
     protected function getHeaderActions(): array
     {
         return [
@@ -28,15 +30,21 @@ class EditProject extends EditRecord
     protected function mutateFormDataBeforeSave(array $data): array
     {
         $uploadedHtml = $data['uploaded_html'] ?? null;
+        $uploadedSourceFile = $data['uploaded_source_file'] ?? null;
         unset($data['uploaded_html']);
+        unset($data['uploaded_source_file']);
 
-        if (blank($uploadedHtml)) {
-            return $data;
+        if (filled($uploadedHtml)) {
+            $data['html_content'] = Storage::disk('local')->get($uploadedHtml);
+            $data['html_filename'] = basename($uploadedHtml);
+            Storage::disk('local')->delete($uploadedHtml);
         }
 
-        $data['html_content'] = Storage::disk('local')->get($uploadedHtml);
-        $data['html_filename'] = basename($uploadedHtml);
-        Storage::disk('local')->delete($uploadedHtml);
+        if (filled($uploadedSourceFile)) {
+            $this->replacedSourceFilePath = $this->record->source_file_path;
+            $data['source_file_path'] = $uploadedSourceFile;
+            $data['source_filename'] = basename($uploadedSourceFile);
+        }
 
         return $data;
     }
@@ -49,6 +57,10 @@ class EditProject extends EditRecord
 
     protected function afterSave(): void
     {
+        if (filled($this->replacedSourceFilePath) && $this->replacedSourceFilePath !== $this->record->source_file_path) {
+            Storage::disk('local')->delete($this->replacedSourceFilePath);
+        }
+
         $userIds = $this->record->users()->pluck('users.id')->all();
         $categoryIds = $this->record->categories()->pluck('categories.id')->all();
 

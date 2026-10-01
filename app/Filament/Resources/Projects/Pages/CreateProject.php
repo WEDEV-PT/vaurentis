@@ -18,15 +18,20 @@ class CreateProject extends CreateRecord
         $data['slug'] = $this->generateUniqueSlug($data['name']);
 
         $uploadedHtml = $data['uploaded_html'] ?? null;
+        $uploadedSourceFile = $data['uploaded_source_file'] ?? null;
         unset($data['uploaded_html']);
+        unset($data['uploaded_source_file']);
 
-        if (blank($uploadedHtml)) {
-            return $data;
+        if (filled($uploadedHtml)) {
+            $data['html_content'] = Storage::disk('local')->get($uploadedHtml);
+            $data['html_filename'] = basename($uploadedHtml);
+            Storage::disk('local')->delete($uploadedHtml);
         }
 
-        $data['html_content'] = Storage::disk('local')->get($uploadedHtml);
-        $data['html_filename'] = basename($uploadedHtml);
-        Storage::disk('local')->delete($uploadedHtml);
+        if (filled($uploadedSourceFile)) {
+            $data['source_file_path'] = $uploadedSourceFile;
+            $data['source_filename'] = basename($uploadedSourceFile);
+        }
 
         return $data;
     }

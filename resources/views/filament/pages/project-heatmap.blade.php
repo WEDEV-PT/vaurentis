@@ -5,9 +5,21 @@
             <p style="margin: 6px 0 0; color: #6b7280;">Aggregated click activity. Brighter areas received more clicks.</p>
         </div>
 
-        <a href="{{ \App\Filament\Resources\ProjectAccesses\ProjectAccessResource::getUrl() }}" class="fi-btn fi-btn-color-gray fi-btn-size-sm">
-            Back to Analytics
-        </a>
+        <div style="display: flex; align-items: end; gap: 10px;">
+            <label style="display: grid; gap: 5px; color: #4b5563; font-size: 12px; font-weight: 600;">
+                Clicks by user
+                <select wire:model.live="selectedUserId" style="min-width: 210px; border: 1px solid #d1d5db; border-radius: 8px; background: #ffffff; color: #111827; font-size: 14px; font-weight: 400; padding: 8px 32px 8px 10px;">
+                    <option value="">All users</option>
+                    @foreach ($this->clickUsers as $user)
+                        <option value="{{ $user->id }}">{{ $user->name }}</option>
+                    @endforeach
+                </select>
+            </label>
+
+            <a href="{{ \App\Filament\Resources\ProjectAccesses\ProjectAccessResource::getUrl() }}" class="fi-btn fi-btn-color-gray fi-btn-size-sm">
+                Back to Analytics
+            </a>
+        </div>
     </div>
 
     <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-bottom: 16px;">

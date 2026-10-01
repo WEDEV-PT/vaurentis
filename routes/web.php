@@ -3,6 +3,7 @@
 use App\Filament\Pages\MyProjects;
 use App\Filament\Resources\Projects\ProjectResource;
 use App\Http\Controllers\ProjectClickController;
+use App\Http\Controllers\ProjectSourceFileController;
 use App\Models\User;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
@@ -10,6 +11,10 @@ use Illuminate\Support\Facades\Storage;
 Route::post('/project-clicks/{project}', [ProjectClickController::class, 'store'])
     ->middleware(['auth', 'throttle:240,1'])
     ->name('project-clicks.store');
+
+Route::get('/projects/{project}/source-file', [ProjectSourceFileController::class, 'download'])
+    ->middleware('auth')
+    ->name('projects.source-file.download');
 
 Route::get('/branding/logo', function () {
     $logoPath = User::query()
