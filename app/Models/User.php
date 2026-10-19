@@ -4,16 +4,20 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
+use Filament\Auth\MultiFactor\App\Concerns\InteractsWithAppAuthentication;
+use Filament\Auth\MultiFactor\App\Contracts\HasAppAuthentication;
+use Filament\Auth\MultiFactor\Email\Concerns\InteractsWithEmailAuthentication;
+use Filament\Auth\MultiFactor\Email\Contracts\HasEmailAuthentication;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-class User extends Authenticatable implements FilamentUser
+class User extends Authenticatable implements FilamentUser, HasAppAuthentication, HasEmailAuthentication
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, InteractsWithAppAuthentication, InteractsWithEmailAuthentication, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -26,6 +30,8 @@ class User extends Authenticatable implements FilamentUser
         'password',
         'is_admin',
         'is_active',
+        'two_factor_required',
+        'two_factor_method',
         'timezone',
         'brand_logo_path',
     ];
@@ -52,12 +58,39 @@ class User extends Authenticatable implements FilamentUser
             'password' => 'hashed',
             'is_admin' => 'boolean',
             'is_active' => 'boolean',
+            'two_factor_required' => 'boolean',
         ];
     }
 
     public function projects()
     {
         return $this->belongsToMany(Project::class)->withTimestamps();
+    }
+
+    protected static function booted(): void
+    {
+        static::saving(function (self $user): void {
+            if (! $user->two_factor_required) {
+                $user->two_factor_method = null;
+                $user->has_email_authentication = false;
+                $user->app_authentication_secret = null;
+
+                return;
+            }
+
+            if ($user->two_factor_method === 'email') {
+                $user->has_email_authentication = true;
+                $user->app_authentication_secret = null;
+
+                return;
+            }
+
+            $user->has_email_authentication = false;
+
+            if ($user->isDirty('two_factor_method')) {
+                $user->app_authentication_secret = null;
+            }
+        });
     }
 
     public function projectAccesses()

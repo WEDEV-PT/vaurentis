@@ -6,11 +6,19 @@ use DateTimeZone;
 use Filament\Auth\Pages\EditProfile as BaseEditProfile;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
+use Filament\Schemas\Components\Component;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 
 class EditProfile extends BaseEditProfile
 {
+    public function getMultiFactorAuthenticationContentComponent(): ?Component
+    {
+        // The authentication method is selected and enforced by a manager in
+        // the user record, so users cannot disable or change it themselves.
+        return null;
+    }
+
     public function form(Schema $schema): Schema
     {
         return parent::form($schema)

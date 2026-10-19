@@ -2,10 +2,14 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Auth\MultiFactor\ManagedAppAuthentication;
+use App\Filament\Auth\MultiFactor\ManagedEmailAuthentication;
 use App\Filament\Auth\Pages\EditProfile;
+use App\Filament\Auth\Pages\SetUpRequiredTwoFactorAuthentication;
 use App\Filament\Pages\MyProjects;
 use App\Filament\Resources\Projects\ProjectResource;
 use App\Http\Middleware\AuditAuthenticate;
+use App\Http\Middleware\EnsureRequiredMultiFactorAuthenticationIsEnabled;
 use App\Models\User;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -33,6 +37,12 @@ class AdminPanelProvider extends PanelProvider
             ->path('app')
             ->login()
             ->profile(EditProfile::class, isSimple: false)
+            ->multiFactorAuthentication(
+                [ManagedAppAuthentication::make(), ManagedEmailAuthentication::make()],
+                SetUpRequiredTwoFactorAuthentication::class,
+                isRequired: true,
+            )
+            ->multiFactorAuthenticationRequiredMiddlewareName(EnsureRequiredMultiFactorAuthenticationIsEnabled::class)
             ->homeUrl(fn (): string => auth()->user()?->is_admin ? ProjectResource::getUrl() : MyProjects::getUrl())
             ->brandName('Vaurentis')
             ->brandLogo(function (): string {
