@@ -96,6 +96,8 @@ class EditProject extends EditRecord
             $this->replacedSourceFilePath = null;
         }
 
+        $this->refreshFormData(['uploaded_html', 'uploaded_source_file']);
+
         $userIds = $this->record->users()->pluck('users.id')->all();
         $categoryIds = $this->record->categories()->pluck('categories.id')->all();
 
