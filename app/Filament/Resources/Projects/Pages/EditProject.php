@@ -20,6 +20,10 @@ class EditProject extends EditRecord
 
     protected ?string $replacedSourceFilePath = null;
 
+    protected ?string $removedHtmlUploadPath = null;
+
+    protected ?string $importedHtmlUploadPath = null;
+
     protected function getHeaderActions(): array
     {
         return [
@@ -31,6 +35,12 @@ class EditProject extends EditRecord
     {
         $data['uploaded_source_file'] = $this->record->source_file_path;
 
+        if (filled($this->record->html_content)) {
+            $htmlPath = $this->existingHtmlPath();
+            Storage::disk('local')->put($htmlPath, $this->record->html_content);
+            $data['uploaded_html'] = $htmlPath;
+        }
+
         return $data;
     }
 
@@ -41,16 +51,23 @@ class EditProject extends EditRecord
         unset($data['uploaded_html']);
         unset($data['uploaded_source_file']);
 
-        if (filled($uploadedHtml)) {
+        $existingHtmlPath = filled($this->record->html_content) ? $this->existingHtmlPath() : null;
+
+        if ($uploadedHtml !== $existingHtmlPath && filled($uploadedHtml)) {
             $data['html_content'] = Storage::disk('local')->get($uploadedHtml);
             $data['html_filename'] = basename($uploadedHtml);
-            Storage::disk('local')->delete($uploadedHtml);
+            $this->removedHtmlUploadPath = $existingHtmlPath;
+            $this->importedHtmlUploadPath = $uploadedHtml;
+        } elseif (blank($uploadedHtml) && filled($this->record->html_content)) {
+            $data['html_content'] = null;
+            $data['html_filename'] = null;
+            $this->removedHtmlUploadPath = $existingHtmlPath;
         }
 
-        if (filled($uploadedSourceFile)) {
+        if ($uploadedSourceFile !== $this->record->source_file_path) {
             $this->replacedSourceFilePath = $this->record->source_file_path;
-            $data['source_file_path'] = $uploadedSourceFile;
-            $data['source_filename'] = basename($uploadedSourceFile);
+            $data['source_file_path'] = filled($uploadedSourceFile) ? $uploadedSourceFile : null;
+            $data['source_filename'] = filled($uploadedSourceFile) ? basename($uploadedSourceFile) : null;
         }
 
         return $data;
@@ -64,8 +81,19 @@ class EditProject extends EditRecord
 
     protected function afterSave(): void
     {
+        if (filled($this->removedHtmlUploadPath)) {
+            Storage::disk('local')->delete($this->removedHtmlUploadPath);
+            $this->removedHtmlUploadPath = null;
+        }
+
+        if (filled($this->importedHtmlUploadPath)) {
+            Storage::disk('local')->delete($this->importedHtmlUploadPath);
+            $this->importedHtmlUploadPath = null;
+        }
+
         if (filled($this->replacedSourceFilePath) && $this->replacedSourceFilePath !== $this->record->source_file_path) {
             Storage::disk('local')->delete($this->replacedSourceFilePath);
+            $this->replacedSourceFilePath = null;
         }
 
         $userIds = $this->record->users()->pluck('users.id')->all();
@@ -77,5 +105,12 @@ class EditProject extends EditRecord
                 'category_ids' => $categoryIds,
             ]);
         }
+    }
+
+    private function existingHtmlPath(): string
+    {
+        $filename = basename($this->record->html_filename ?: 'project.html');
+
+        return "project-html-existing/{$this->record->id}/{$filename}";
     }
 }

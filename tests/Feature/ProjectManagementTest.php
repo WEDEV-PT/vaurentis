@@ -351,4 +351,43 @@ class ProjectManagementTest extends TestCase
             ->get("/app/projects/view/{$project->id}")
             ->assertNotFound();
     }
+
+    public function test_admin_can_see_and_remove_existing_project_files(): void
+    {
+        Storage::fake('local');
+        $sourcePath = 'project-source-files/project-data.csv';
+        Storage::disk('local')->put($sourcePath, "name\nExample\n");
+
+        $project = Project::query()->create([
+            'name' => 'Project with files',
+            'slug' => 'project-with-files',
+            'html_content' => '<h1>Project</h1>',
+            'html_filename' => 'project.html',
+            'source_file_path' => $sourcePath,
+            'source_filename' => 'project-data.csv',
+            'status' => 'active',
+        ]);
+        $this->actingAs(User::factory()->create(['is_admin' => true]));
+
+        $htmlPath = "project-html-existing/{$project->id}/project.html";
+        Livewire::test(EditProject::class, ['record' => $project->getKey()])
+            ->assertFormSet([
+                'uploaded_html' => $htmlPath,
+                'uploaded_source_file' => $sourcePath,
+            ])
+            ->fillForm([
+                'uploaded_html' => null,
+                'uploaded_source_file' => null,
+            ])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $project->refresh();
+        $this->assertNull($project->html_content);
+        $this->assertNull($project->html_filename);
+        $this->assertNull($project->source_file_path);
+        $this->assertNull($project->source_filename);
+        Storage::disk('local')->assertMissing($htmlPath);
+        Storage::disk('local')->assertMissing($sourcePath);
+    }
 }
