@@ -29,7 +29,8 @@ class ProjectManagementTest extends TestCase
 
         $this->actingAs($administrator)
             ->get('/app/projects/create')
-            ->assertOk();
+            ->assertOk()
+            ->assertSee('PowerPoint');
 
         $this->actingAs($administrator)
             ->get('/app/users/create')

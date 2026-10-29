@@ -30,18 +30,20 @@ class ProjectForm
                     ->helperText('Upload an .html file up to 2 MB. It will be displayed to assigned users.')
                     ->columnSpanFull(),
                 FileUpload::make('uploaded_source_file')
-                    ->label('Project data file (CSV or Excel)')
+                    ->label('Project attachment (CSV, Excel or PowerPoint)')
                     ->acceptedFileTypes([
                         'text/csv',
                         'application/csv',
                         'application/vnd.ms-excel',
                         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                        'application/vnd.ms-powerpoint',
+                        'application/vnd.openxmlformats-officedocument.presentationml.presentation',
                     ])
                     ->disk('local')
                     ->directory('project-source-files')
                     ->preserveFilenames()
                     ->maxSize(10240)
-                    ->helperText('Optional source file. Assigned users and administrators can download it from the project.')
+                    ->helperText('Optional CSV, Excel or PowerPoint attachment. Assigned users and administrators can download it from the project.')
                     ->columnSpanFull(),
                 Select::make('status')
                     ->label('Status')

@@ -20,7 +20,7 @@
             </button>
             @if (filled($project->source_file_path))
                 @php($sourceExtension = strtolower(pathinfo($project->source_filename, PATHINFO_EXTENSION)))
-                @php($downloadLabel = in_array($sourceExtension, ['xlsx', 'xls'], true) ? 'Download Excel' : ($sourceExtension === 'csv' ? 'Download CSV' : 'Download file'))
+                @php($downloadLabel = in_array($sourceExtension, ['xlsx', 'xls'], true) ? 'Download Excel' : (in_array($sourceExtension, ['ppt', 'pptx'], true) ? 'Download PowerPoint' : ($sourceExtension === 'csv' ? 'Download CSV' : 'Download file')))
                 <a class="project-control" href="{{ route('projects.source-file.download', ['project' => $project]) }}" title="{{ $downloadLabel }}" aria-label="{{ $downloadLabel }}" style="position: absolute; top: 12px; right: 64px; z-index: 1; display: flex; width: 42px; height: 42px; align-items: center; justify-content: center; border: 1px solid #d1d5db; border-radius: 8px; background: #ffffff; color: #111827; cursor: pointer; box-shadow: 0 1px 3px rgba(0, 0, 0, .2);"><svg style="width: 21px; height: 21px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v12m0 0 4-4m-4 4-4-4m-5 7v2a1 1 0 0 0 1 1h16a1 1 0 0 0 1 1v-2" /></svg><span class="project-control-tooltip">{{ $downloadLabel }}</span></a>
             @endif
         </div>
