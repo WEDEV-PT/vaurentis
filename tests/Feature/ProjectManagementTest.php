@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Filament\Resources\Projects\Pages\EditProject;
 use App\Models\AuditLog;
 use App\Models\Category;
 use App\Models\Project;
@@ -11,6 +12,7 @@ use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Livewire\Livewire;
 use Tests\TestCase;
 
 class ProjectManagementTest extends TestCase
@@ -321,6 +323,12 @@ class ProjectManagementTest extends TestCase
             ->get("/app/projects/{$project->id}/preview")
             ->assertOk()
             ->assertSee('Download CSV');
+
+        Livewire::test(EditProject::class, ['record' => $project->getKey()])
+            ->assertFormSet([
+                'uploaded_source_file' => 'project-source-files/project-data.csv',
+            ]);
+
     }
 
     public function test_a_source_file_only_project_is_not_available_to_an_assigned_user(): void

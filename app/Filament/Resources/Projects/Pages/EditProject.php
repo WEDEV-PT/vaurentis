@@ -27,6 +27,13 @@ class EditProject extends EditRecord
         ];
     }
 
+    protected function mutateFormDataBeforeFill(array $data): array
+    {
+        $data['uploaded_source_file'] = $this->record->source_file_path;
+
+        return $data;
+    }
+
     protected function mutateFormDataBeforeSave(array $data): array
     {
         $uploadedHtml = $data['uploaded_html'] ?? null;
